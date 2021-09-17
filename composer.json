@@ -1,0 +1,23 @@
+{
+    "name": "webneex/nusoap",
+    "description": "NuSOAP - SOAP Toolkit for PHP (Without gzip compression stuff)",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Francisco Carribero",
+            "email": "francisco.carribero@webneex.com"
+        }
+    ],
+    "require": {
+        "php": "^5.6|^7.0",
+        "ext-xml": "*",
+        "ext-zlib": "*",
+        "ext-curl": "*"
+    },
+    "autoload": {
+        "classmap": [
+            "lib/"
+        ]
+    }
+}

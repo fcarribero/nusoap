@@ -651,7 +651,7 @@ class nusoap_server extends nusoap_base {
     function serialize_return() {
         $this->debug('Entering serialize_return methodname: ' . $this->methodname . ' methodURI: ' . $this->methodURI);
         // if fault
-        if (isset($this->methodreturn) && is_object($this->methodreturn) && ((get_class($this->methodreturn) == 'soap_fault') || (get_class($this->methodreturn) == 'nusoap_fault'))) {
+        if (isset($this->methodreturn) && is_object($this->methodreturn) && ((get_class($this->methodreturn) == soap_fault::class) || (get_class($this->methodreturn) == nusoap_fault::class))) {
             $this->debug('got a fault object from method');
             $this->fault = $this->methodreturn;
             return;

@@ -448,26 +448,6 @@ class nusoap_server extends nusoap_base {
         $this->debug('entering parse_request()');
         $this->parse_http_headers();
         $this->debug('got character encoding: ' . $this->xml_encoding);
-        // uncompress if necessary
-        if (isset($this->headers['content-encoding']) && $this->headers['content-encoding'] != '') {
-            $this->debug('got content encoding: ' . $this->headers['content-encoding']);
-            if ($this->headers['content-encoding'] == 'deflate' || $this->headers['content-encoding'] == 'gzip') {
-                // if decoding works, use it. else assume data wasn't gzencoded
-                if (function_exists('gzuncompress')) {
-                    if ($this->headers['content-encoding'] == 'deflate' && $degzdata = @gzuncompress($data)) {
-                        $data = $degzdata;
-                    } elseif ($this->headers['content-encoding'] == 'gzip' && $degzdata = gzinflate(substr($data, 10))) {
-                        $data = $degzdata;
-                    } else {
-                        $this->fault('SOAP-ENV:Client', 'Errors occurred when trying to decode the data');
-                        return;
-                    }
-                } else {
-                    $this->fault('SOAP-ENV:Client', 'This Server does not support compressed data');
-                    return;
-                }
-            }
-        }
         $this->request .= "\r\n" . $data;
         $data = $this->parseRequest($this->headers, $data);
         $this->requestSOAP = $data;
@@ -775,40 +755,6 @@ class nusoap_server extends nusoap_base {
         $type = $this->getHTTPContentType();
         $charset = $this->getHTTPContentTypeCharset();
         $this->outgoing_headers[] = "Content-Type: $type" . ($charset ? '; charset=' . $charset : '');
-        //begin code to compress payload - by John
-        // NOTE: there is no way to know whether the Web server will also compress
-        // this data.
-        if (strlen($payload) > 1024 && isset($this->headers) && isset($this->headers['accept-encoding'])) {
-            if (strstr($this->headers['accept-encoding'], 'gzip')) {
-                if (function_exists('gzencode')) {
-                    if (isset($this->debug_flag) && $this->debug_flag) {
-                        $payload .= "<!-- Content being gzipped -->";
-                    }
-                    $this->outgoing_headers[] = "Content-Encoding: gzip";
-                    $payload = gzencode($payload);
-                } else {
-                    if (isset($this->debug_flag) && $this->debug_flag) {
-                        $payload .= "<!-- Content will not be gzipped: no gzencode -->";
-                    }
-                }
-            } elseif (strstr($this->headers['accept-encoding'], 'deflate')) {
-                // Note: MSIE requires gzdeflate output (no Zlib header and checksum),
-                // instead of gzcompress output,
-                // which conflicts with HTTP 1.1 spec (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.5)
-                if (function_exists('gzdeflate')) {
-                    if (isset($this->debug_flag) && $this->debug_flag) {
-                        $payload .= "<!-- Content being deflated -->";
-                    }
-                    $this->outgoing_headers[] = "Content-Encoding: deflate";
-                    $payload = gzdeflate($payload);
-                } else {
-                    if (isset($this->debug_flag) && $this->debug_flag) {
-                        $payload .= "<!-- Content will not be deflated: no gzcompress -->";
-                    }
-                }
-            }
-        }
-        //end code
         $this->outgoing_headers[] = "Content-Length: " . strlen($payload);
         reset($this->outgoing_headers);
         foreach ($this->outgoing_headers as $hdr) {
